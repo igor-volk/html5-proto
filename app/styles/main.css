@@ -1,0 +1,45 @@
+html, body {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+}
+body * {
+  font-family: sky-regular;
+  color: #fefefe;
+}
+.background {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: -1000;
+  background-image: url('../asset/img/bg/bg.png');
+  background-attachment: fixed;
+  background-size: 100% 100%;
+}
+
+.logo {
+  width: 100%;
+  height:75px;
+}
+
+.splash-logo {
+  position:relative;
+  left: 50%;
+}
+
+#nav_canvas{
+  position:relative;
+   width:100%;
+   height:175px;
+}
+
+@font-face {
+  font-family: 'sky-regular';
+  src: url('../asset/font/SkyScreenRegular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'sky-bold';
+  src: url('../asset/font/SkyScreenBold.ttf') format('truetype');
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sky Store YouView</title>
+  <meta name="description" content="">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  	<div class="background"></div>
+  	<div class="logo">
+    	<img class="splash-logo" src="asset/img/all/header.png"></img>
+  	</div>
+  	<canvas id="nav_canvas"></canvas>
+</body>
+<script>
+var navData = ["My Library", "My Account", "Help", "About sky Store"];
+function buildNav() 
+{
+	var nav = document.getElementById("nav_canvas");
+	var ctx = nav.getContext("2d");
+	ctx.imageSmoothingEnabled =true;
+	ctx.font = "25px Verdana";
+	ctx.fillStyle = "white"
+	ctx.fillText("Hello", 0, 30)
+}
+
+buildNav();
+</script>
+</html>
