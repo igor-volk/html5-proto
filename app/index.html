@@ -8,23 +8,31 @@
 </head>
 <body>
   	<div class="background"></div>
-  	<div class="logo">
-    	<img class="splash-logo" src="asset/img/all/header.png"></img>
+  	<div class="logo-container">
+    	<img class="logo" src="asset/img/all/header.png"></img>
   	</div>
   	<canvas id="nav_canvas"></canvas>
 </body>
 <script>
 var navData = ["My Library", "My Account", "Help", "About sky Store"];
-function buildNav() 
-{
-	var nav = document.getElementById("nav_canvas");
+var nav = document.getElementById("nav_canvas");
 	var ctx = nav.getContext("2d");
+	ctx.textBaseline = "top";
 	ctx.imageSmoothingEnabled =true;
-	ctx.font = "25px Verdana";
+	ctx.font = "10px Verdana";
 	ctx.fillStyle = "white"
-	ctx.fillText("Hello", 0, 30)
+
+function addNavItem(index, xText, data) 
+{
+	if(index == data.length) return;
+
+	var textInfo = ctx.measureText(data[index]);
+	var textWidth = (0.5 + textInfo.width) | 0;
+	ctx.fillText(data[index], xText, 0);
+	addNavItem( ++index, xText + textWidth + 10, data);
 }
 
-buildNav();
+addNavItem(0,0, navData);
+
 </script>
 </html>
