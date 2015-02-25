@@ -59,8 +59,11 @@ var navData = [
 ];
 var cnv = document.getElementById("nav_canvas");
 var ctx = cnv.getContext("2d");
-var bitmapData;
-ctx.textBaseline = "hanging";
+var bitmapData = document.createElement('canvas');
+bitmapData.width = cnv.width;
+bitmapData.height = cnv.height;
+
+ctx.textBaseline = "top";
 ctx.imageSmoothingEnabled = true;
 ctx.font = "25px sky-regular";
 ctx.fillStyle = SELECTED_WHITE;
@@ -113,28 +116,33 @@ function deselectNavItem(index)
 	ctx.fillText(info.title, info.x, 0, info.width);
 }
 
+var menuX = 0;
 function animateRight()
 {
 	ctx.save();
 	ctx.clearRect(0,0,cnv.width,cnv.height); // clear canvas
-	ctx.translate(-5,0);
-	ctx.putImageData(bitmapData,0,0);
+	//ctx.translate(-1,0);
+	menuX--;
+	ctx.drawImage(bitmapData,menuX,0);
 	ctx.restore();
 	window.requestAnimationFrame(animateRight);
 }
 
 function animateLeft()
 {
+	ctx.save();
 	ctx.clearRect(0,0,cnv.width,cnv.height); // clear canvas
-	ctx.translate(5,0);
-	ctx.putImageData(bitmapData,0,0);
+	//ctx.translate(1,0);
+	menuX++;
+	ctx.drawImage(bitmapData,menuX,0);
+	ctx.restore();
 	window.requestAnimationFrame(animateLeft);
 }
 
 
 
 addNavItem(selectedIndex,0, navData);
-bitmapData = ctx.getImageData(0,0,cnv.width,cnv.height);
+bitmapData.getContext("2d").drawImage(cnv,0,0);
 selectNavItem(selectedIndex);
 
 </script>
