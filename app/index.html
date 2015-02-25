@@ -11,28 +11,131 @@
   	<div class="logo-container">
     	<img class="logo" src="asset/img/all/header.png"></img>
   	</div>
-  	<canvas id="nav_canvas"></canvas>
+  	<canvas id="nav_canvas" width="1280px" height="175px"></canvas>
 </body>
+<script src="js/Colours.js"  type="text/javascript"></script>
 <script>
-var navData = ["My Library", "My Account", "Help", "About sky Store"];
-var nav = document.getElementById("nav_canvas");
-	var ctx = nav.getContext("2d");
-	ctx.textBaseline = "top";
-	ctx.imageSmoothingEnabled =true;
-	ctx.font = "10px Verdana";
-	ctx.fillStyle = "white"
+document.onkeydown = function(e) {
+    switch (e.keyCode) {
+        case 37:
+            //left
+            navigateLeft();
+            break;
+        case 38:
+            //up
+            break;
+        case 39:
+        	navigateRight();
+            //right
+            break;
+        case 40:
+            //down
+            break;
+    }
+};
+var selectedIndex = 0;
+var gap = 40;
+var navData = [
+	{
+		title:"My Library",
+		x:0,
+		width:0
+	},
+	{
+		title:"My Account",
+		x:0,
+		width:0
+	},
+	{
+		title:"Help",
+		x:0,
+		width:0
+	},
+	{
+		title:"About sky Store",
+		x:0,
+		width:0
+	} 
+];
+var cnv = document.getElementById("nav_canvas");
+var ctx = cnv.getContext("2d");
+var bitmapData;
+ctx.textBaseline = "hanging";
+ctx.imageSmoothingEnabled = true;
+ctx.font = "25px sky-regular";
+ctx.fillStyle = SELECTED_WHITE;
 
 function addNavItem(index, xText, data) 
 {
 	if(index == data.length) return;
 
-	var textInfo = ctx.measureText(data[index]);
-	var textWidth = (0.5 + textInfo.width) | 0;
-	ctx.fillText(data[index], xText, 0);
-	addNavItem( ++index, xText + textWidth + 10, data);
+	var title = data[index].title;
+	var textWidth = (0.5 + ctx.measureText(title).width) | 0;
+	ctx.fillText(title, xText, 0);
+	data[index].x = xText;
+	data[index].width = textWidth + gap;
+	addNavItem( ++index, xText + textWidth + gap, data);
 }
 
-addNavItem(0,0, navData);
+function navigateRight()
+{
+	if(selectedIndex == (navData.length - 1)) return;
+
+	deselectNavItem(selectedIndex);
+	selectedIndex++
+	selectNavItem(selectedIndex);
+	animateRight();
+}
+
+function navigateLeft()
+{
+	if(selectedIndex == 0) return;
+
+	deselectNavItem(selectedIndex);
+	selectedIndex--;
+	selectNavItem(selectedIndex);
+	animateLeft();
+}
+
+function selectNavItem(index)
+{
+	var info = navData[index];
+	ctx.clearRect(info.x, 0, info.width, cnv.height);
+	ctx.fillStyle = FOCUSED_YELLOW;
+	ctx.fillText(info.title, info.x, 0, info.width);
+}
+
+function deselectNavItem(index)
+{
+	var info = navData[index];
+	ctx.clearRect(info.x, 0, info.width, cnv.height);
+	ctx.fillStyle = SELECTED_WHITE;
+	ctx.fillText(info.title, info.x, 0, info.width);
+}
+
+function animateRight()
+{
+	ctx.save();
+	ctx.clearRect(0,0,cnv.width,cnv.height); // clear canvas
+	ctx.translate(-5,0);
+	ctx.putImageData(bitmapData,0,0);
+	ctx.restore();
+	window.requestAnimationFrame(animateRight);
+}
+
+function animateLeft()
+{
+	ctx.clearRect(0,0,cnv.width,cnv.height); // clear canvas
+	ctx.translate(5,0);
+	ctx.putImageData(bitmapData,0,0);
+	window.requestAnimationFrame(animateLeft);
+}
+
+
+
+addNavItem(selectedIndex,0, navData);
+bitmapData = ctx.getImageData(0,0,cnv.width,cnv.height);
+selectNavItem(selectedIndex);
 
 </script>
 </html>
