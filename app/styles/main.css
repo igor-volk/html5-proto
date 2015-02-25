@@ -29,11 +29,6 @@ body * {
   left: 50%;
 }
 
-#nav_canvas{
-   /*width:1280px;
-   height:100%*/
-}
-
 @font-face {
   font-family: 'sky-regular';
   src: url('../asset/font/SkyScreenRegular.ttf') format('truetype');
