@@ -8,21 +8,177 @@
   <!--
   Import framework and libs
   -->
+  <script src="components/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/easing/EasePack.min.js"></script>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenLite.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
-  <script src="js/app.js"></script>
+  <!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>-->
+  
 
 </head>
 <body>
+    <script src="js/Colours.js"  type="text/javascript"></script>
+    <!--<script src="js/app.js"></script> -->
   	<div class="background"></div>
   	<div class="logo-container">
     	<img class="logo" src="asset/img/all/header.png"></img>
   	</div>
-  	<c-navigation width="1280px" height="40px"></c-navigation>
+  	
   	<!--
   	Now import app-specific JS
+    //width="1280px" height="40px"
   	-->
-    <script src="js/Colours.js"  type="text/javascript"></script>
+    <x-navigation id="myNav" width="1280px" height="40px"></x-navigation>
+    <script type="text/javascript">
+    
+    var NavProto = Object.create(HTMLElement.prototype, {
+      createdCallback: {
+        value:function() 
+        {
+          //this.width = '1280';
+          //this.height = '40';
+
+          this.addEventListener("keydown", function(e) 
+          {
+            switch (e.keyCode) 
+            {
+              case 37:
+                //left
+                navigateLeft();
+                break;
+              case 38:
+                //up
+                break;
+              case 39:
+                navigateRight();
+                //right
+                break;
+              case 40:
+                //down
+                break;
+            }
+          });
+
+          this.selectedIndex = 0;
+          this.gap = 40;
+          this.navData = [
+            {
+              title:"My Library",
+              x:0,
+              width:0
+            },
+            {
+              title:"My Account",
+              x:0,
+              width:0
+            },
+            {
+              title:"Help",
+              x:0,
+              width:0
+            },
+            {
+              title:"About sky Store",
+              x:0,
+              width:0
+            } 
+          ];
+
+          this.offsetX = 0;
+          var ref = this;
+          var func = ref.getContext;
+          this.visibleContext = ref.getContext();
+
+          this.bufferCanvas = document.createElement('canvas')
+          this.buffer = bufferCanvas.getContext("2d");
+          this.bufferCanvas.width = this.width;
+          this.bufferCanvas.height = this.height;
+
+          visibleContext.textBaseline = this.buffer.textBaseline = "top";
+          visibleContext.imageSmoothingEnabled = this.buffer.imageSmoothingEnabled = true;
+          visibleContext.font = this.buffer.font = "25px sky-regular";
+          visibleContext.fillStyle = this.buffer.fillStyle = SELECTED_WHITE;
+
+          addNavItem(selectedIndex,0, navData);
+          selectNavItem(selectedIndex);
+          visibleContext.drawImage(bufferCanvas,0,0);
+        }
+      },
+      addNavItem:{
+        value:function(index, xText, data) 
+        {
+          if(index == data.length) return;
+
+          var title = data[index].title;
+          var textWidth = (0.5 + buffer.measureText(title).width) | 0;
+          buffer.fillText(title, xText, 0);
+          data[index].x = xText;
+          data[index].width = textWidth + gap;
+          addNavItem( ++index, xText + textWidth + gap, data);
+        }
+      },
+      navigateRight:{
+        value:function()
+        {
+          if(selectedIndex == (navData.length - 1)) return;
+
+          deselectNavItem(selectedIndex);
+          selectedIndex++
+          selectNavItem(selectedIndex);
+          var nextX = navData[selectedIndex].x
+          TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw});
+        }
+      },
+      navigateLeft:{
+        value:function()
+        {
+          if(selectedIndex == 0) return;
+
+          deselectNavItem(selectedIndex);
+          selectedIndex--;
+          selectNavItem(selectedIndex);
+          var nextX = navData[selectedIndex].x
+          TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw});
+        }
+      },
+      selectNavItem:{
+        value:function(index)
+        {
+          var info = navData[index];
+          buffer.save();
+          buffer.clearRect(info.x, 0, info.width, visibleCanvas.height);
+          buffer.fillStyle = FOCUSED_YELLOW;
+          buffer.fillText(info.title, info.x, 0, info.width);
+          buffer.restore();
+        }
+      },
+      deselectNavItem:{
+        value:function(index)
+        {
+          var info = navData[index];
+          buffer.save();
+          buffer.clearRect(info.x, 0, info.width, visibleCanvas.height);
+          buffer.fillStyle = SELECTED_WHITE;
+          buffer.fillText(info.title, info.x, 0, info.width);
+          buffer.restore();
+        }
+      },
+      redraw:{
+        value:function()
+        {
+          //visibleContext.save();
+          this.visibleContext.clearRect(0,0,this.width,this.height); // clear canvas
+          this.visibleContext.drawImage(bufferCanvas,offsetX,0);
+          //visibleContext.restore();
+        }
+      }
+    });
+
+
+    var NavConstructor = document.registerElement('x-navigation', {
+      prototype: NavProto
+    });
+    //var nav = document.getElementById("myNav")
+    </script>
+    
 </body>
 </html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html ng-app="app">
+<head>
+  <meta charset="utf-8">
+  <title>Sky Store YouView</title>
+  <meta name="description" content="">
+  <link rel="stylesheet" href="styles/main.css">
+  <!--
+  Import framework and libs
+  -->
+  <script src="components/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+</head>
+<body>
+    <x-foo id="foo" width="1280px" height="40px"></x-foo>
+
+    <script type="text/javascript">
+    
+    var proto = Object.create(HTMLCanvasElement.prototype, {
+    createdCallback: {
+      value: function() {
+        var c = document.getElementById("foo");
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#FF0000";
+        ctx.fillRect(0,0,150,75);
+      }
+    }
+  });
+  document.registerElement('x-foo', {prototype: proto});
+  var foo = document.getElementById("foo");
+  </script>
+    
+</body>
+</html>

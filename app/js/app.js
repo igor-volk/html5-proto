@@ -1,36 +1,33 @@
-angular.module('navigation', [])
-  .directive('cNavigation', function() {
-    return {
-      scope: {},
-      templateUrl: 'navigation.html',
-      replace: true,
-      controller: 'NavigationCtrl',
-      controllerAs: 'ctrl'
-    };
-  })
-  .controller('NavigationCtrl', function($scope) {
-    
-    $scope.keydown = function(e) {
-	    switch (e.keyCode) {
-	        case 37:
-	            //left
-	            navigateLeft();
-	            break;
-	        case 38:
-	            //up
-	            break;
-	        case 39:
-	        	navigateRight();
-	            //right
-	            break;
-	        case 40:
-	            //down
-	            break;
-	    }
-	};
-	var selectedIndex = 0;
-	var gap = 40;
-	var navData = [
+
+var navProto = Object.create(HTMLCanvasElement.prototype);
+
+navProto.createdCallback = function() 
+{
+	this.addEventListener("keydown", function(e) 
+		{
+			switch (e.keyCode) 
+			{
+				case 37:
+					//left
+					navigateLeft();
+					break;
+				case 38:
+					//up
+					break;
+				 case 39:
+					navigateRight();
+					//right
+					break;
+				 case 40:
+					//down
+					 break;
+			}
+		}
+	);
+
+	this.selectedIndex = 0;
+	this.gap = 40;
+	this.navData = [
 		{
 			title:"My Library",
 			x:0,
@@ -53,22 +50,26 @@ angular.module('navigation', [])
 		} 
 	];
 
-	var offsetX = 0;
-	var visibleCanvas = document.getElementById("nav_canvas");
-	var visibleContext = visibleCanvas.getContext("2d");
+	this.offsetX = 0;
+	this.visibleCanvas = this;
+	this.visibleContext = visibleCanvas.getContext("2d");
 
+	this.bufferCanvas = document.createElement('canvas')
+	this.buffer = bufferCanvas.getContext("2d");
+	this.bufferCanvas.width = this.visibleCanvas.width;
+	this.bufferCanvas.height = this.visibleCanvas.height;
 
-	var bufferCanvas = document.createElement('canvas')
-	var buffer = bufferCanvas.getContext("2d");
-	bufferCanvas.width = visibleCanvas.width;
-	bufferCanvas.height = visibleCanvas.height;
+	this.visibleContext.textBaseline = this.buffer.textBaseline = "top";
+	this.visibleContext.imageSmoothingEnabled = this.buffer.imageSmoothingEnabled = true;
+	this.visibleContext.font = this.buffer.font = "25px sky-regular";
+	this.visibleContext.fillStyle = this.buffer.fillStyle = SELECTED_WHITE;
 
-	visibleContext.textBaseline = buffer.textBaseline = "top";
-	visibleContext.imageSmoothingEnabled = buffer.imageSmoothingEnabled = true;
-	visibleContext.font = buffer.font = "25px sky-regular";
-	visibleContext.fillStyle = buffer.fillStyle = SELECTED_WHITE;
+	addNavItem(selectedIndex,0, navData);
+	selectNavItem(selectedIndex);
+	visibleContext.drawImage(bufferCanvas,0,0);
+};
 
-	function addNavItem(index, xText, data) 
+navProto.addNavItem = function(index, xText, data) 
 	{
 		if(index == data.length) return;
 
@@ -80,7 +81,7 @@ angular.module('navigation', [])
 		addNavItem( ++index, xText + textWidth + gap, data);
 	}
 
-	function navigateRight()
+	navProto.navigateRight = function()
 	{
 		if(selectedIndex == (navData.length - 1)) return;
 
@@ -91,7 +92,7 @@ angular.module('navigation', [])
 		TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw});
 	}
 
-	function navigateLeft()
+	navProto.navigateLeft = function()
 	{
 		if(selectedIndex == 0) return;
 
@@ -102,7 +103,7 @@ angular.module('navigation', [])
 		TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw});
 	}
 
-	function selectNavItem(index)
+	navProto.selectNavItem = function(index)
 	{
 		var info = navData[index];
 		buffer.save();
@@ -112,7 +113,7 @@ angular.module('navigation', [])
 		buffer.restore();
 	}
 
-	function deselectNavItem(index)
+	navProto.deselectNavItem = function(index)
 	{
 		var info = navData[index];
 		buffer.save();
@@ -122,7 +123,7 @@ angular.module('navigation', [])
 		buffer.restore();
 	}
 
-	function redraw()
+	navProto.redraw = function()
 	{
 		//visibleContext.save();
 		visibleContext.clearRect(0,0,visibleCanvas.width,visibleCanvas.height); // clear canvas
@@ -130,13 +131,27 @@ angular.module('navigation', [])
 		//visibleContext.restore();
 	}
 
+var Navigation = document.registerElement('c-navigation', {
+	prototype: navProto,
+	extends: 'canvas'
+});
 
+// var n = document.createElement('c-navigation');
+// document.body.appendChild(n);
 
-	addNavItem(selectedIndex,0, navData);
-	selectNavItem(selectedIndex);
-	visibleContext.drawImage(bufferCanvas,0,0);
+// angular.module('navigation', [])
+//   .directive('cNavigation', function() {
+//     return {
+//       scope: {},
+//       templateUrl: 'navigation.html',
+//       replace: true,
+//       controller: 'NavigationCtrl',
+//       controllerAs: 'ctrl'
+//     };
+//   })
+//   .controller('NavigationCtrl', function($scope) {
 
   
-  });
+//   });
 
-var app = angular.module("app", ['navigation']);
+var app = angular.module("app", []);//'navigation'
