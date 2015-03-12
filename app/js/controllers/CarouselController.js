@@ -1,12 +1,12 @@
-function CarouselController(view)
+function CarouselController(view, service)
 {
 	this.view = view;
-	var service = new CarouselService();
-	service.addEventListener("dataLoaded", this.buildView.bind(this));
-	
+	service.carouselLoaded.add(this.buildView.bind(this));
+	service.load();
 }
 
-CarouselController.prototype.buildView = function(xml)
+CarouselController.prototype.buildView = function(jsonData)
 {
-	this.view.build(xml);
+	var carouselVO = JSON.parse(jsonData)
+	this.view.build(carouselVO);
 }

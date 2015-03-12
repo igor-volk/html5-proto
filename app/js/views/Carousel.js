@@ -2,32 +2,15 @@ function Carousel(view)
 {
 	window.addEventListener("keydown", this.keydownHandler.bind(this));
 
+	this.items = [];
+	this.itemData = [];
+	this.NUMBER_OF_ITEMS = 9;
+	this.SPACING = 16;
+	this.VANISHING_POINT_LEFT = 2;
+	this.numberOfItems = 0;
 	this.selectedIndex = 0;
-	this.gap = 40;
-	this.navData = [
-	{
-		title:"My Library",
-		x:0,
-		width:0
-	},
-	{
-		title:"My Account",
-		x:0,
-		width:0
-	},
-	{
-		title:"Help",
-		x:0,
-		width:0
-	},
-	{
-		title:"About sky Store",
-		x:0,
-		width:0
-	} 
-	];
+	this.itemOffsetIndex = 0;
 
-	this.offsetX = 0;
 	this.visibleCanvas = view.getCarousel();
 	this.visibleContext = this.visibleCanvas.getContext("2d");
 
@@ -36,14 +19,9 @@ function Carousel(view)
 	this.bufferCanvas.width = this.visibleCanvas.width;
 	this.bufferCanvas.height = this.visibleCanvas.height;
 
-	this.visibleContext.textBaseline = this.buffer.textBaseline = "top";
-	this.visibleContext.imageSmoothingEnabled = this.buffer.imageSmoothingEnabled = true;
-	this.visibleContext.font = this.buffer.font = "25px sky-regular";
-	this.visibleContext.fillStyle = this.buffer.fillStyle = SELECTED_WHITE;
-
-	this.addNavItem(this.selectedIndex, 0, this.navData);
-	this.selectNavItem(this.selectedIndex);
-	this.visibleContext.drawImage(this.bufferCanvas,0,0);
+	//this.addNavItem(this.selectedIndex, 0, this.navData);
+	//this.selectNavItem(this.selectedIndex);
+	//this.visibleContext.drawImage(this.bufferCanvas,0,0);
 }
 Carousel.prototype.keydownHandler = function(event)
 {
@@ -51,13 +29,13 @@ Carousel.prototype.keydownHandler = function(event)
 	{
 		case 37:
 	     		//left
-	            this.navigateLeft();
+	            //this.navigateLeft();
 	            break;
 	    case 38:
 	            //up
 	            break;
 	    case 39:
-	            this.navigateRight();
+	            //this.navigateRight();
 	            //right
 	            break;
 	    case 40:
@@ -65,61 +43,44 @@ Carousel.prototype.keydownHandler = function(event)
 	            break;
 	}
 }
-Carousel.prototype.addNavItem = function(index, xText, data) 
+Carousel.prototype.build = function(carouselVO)
 {
-	if(index == data.length) return;
+	this.itemData = carouselVO.content.assets;
 
-	var title = data[index].title;
-	var textWidth = (0.5 + this.buffer.measureText(title).width) | 0;
-	this.buffer.fillText(title, xText, 0);
-	data[index].x = xText;
-	data[index].width = textWidth + this.gap;
-	this.addNavItem( ++index, xText + textWidth + this.gap, data);
-}
-Carousel.prototype.navigateRight = function()
-{
-	if(this.selectedIndex == (this.navData.length - 1)) return;
+	var currentX = 0;
+	var numItems = (this.NUMBER_OF_ITEMS<this.itemData.length) ? this.NUMBER_OF_ITEMS : this.itemData.length;
 
-	this.deselectNavItem(this.selectedIndex);
-	this.selectedIndex++
-	this.selectNavItem(this.selectedIndex);
-	var nextX = this.navData[this.selectedIndex].x
-	var redraw = this.redraw.bind(this);
-	TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw});
-}
-Carousel.prototype.navigateLeft = function()
-{
-	if(this.selectedIndex == 0) return;
+	this.itemOffsetIndex = this.selectedIndex - this.VANISHING_POINT_LEFT;
+	//_itemOffsetIndex = Math.min(_itemOffsetIndex ,_itemData.length-NUMBER_OF_ITEMS);
+	this.itemOffsetIndex = (this.itemOffsetIndex<(this.itemData.length-this.NUMBER_OF_ITEMS)) ? this.itemOffsetIndex : (this.itemData.length-this.NUMBER_OF_ITEMS);
+	//_itemOffsetIndex = Math.max(_itemOffsetIndex ,0);
+	this.itemOffsetIndex = (this.itemOffsetIndex>0) ? this.itemOffsetIndex : 0;
 
-	this.deselectNavItem(this.selectedIndex);
-	this.selectedIndex--;
-	this.selectNavItem(this.selectedIndex);
-	var nextX = this.navData[this.selectedIndex].x;
-	var redraw = this.redraw.bind(this);
-	TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw});
+	for(var i = this.itemOffsetIndex; i < this.itemOffsetIndex + numItems; i++)
+	{
+		// renderer = new _itemRendererType();
+		// var d:Object = _itemData[i];
+		// renderer.render(d);
+		// renderer.x = currentX;
+		// currentX += renderer.width + SPACING;
+		// _items[i% NUMBER_OF_ITEMS] = renderer;
+		// _itemHolder.addChild(renderer);
+		var item = new CarouselItem();
+		currentX += item.width + this.SPACING;
+		item.x = currentX;
+		item.load(this.itemData[i].links[0].href);
+		item.onImageLoaded.add(this.addItem.bind(this));
+
+		this.items[i%this.NUMBER_OF_ITEMS] = item;
+	}	
+	
+		//_itemHolder.x = -selectedItemRenderer.x;
+		//selectedItemRenderer.onItemChanged.add(onCarouselStopped.dispatch);
+		//_flushTimer.start();
+
 }
-Carousel.prototype.selectNavItem = function(index)
+Carousel.prototype.addItem = function(image, itemX) 
 {
-	var info = this.navData[index];
-	this.buffer.save();
-	this.buffer.clearRect(info.x, 0, info.width, this.visibleCanvas.height);
-	this.buffer.fillStyle = FOCUSED_YELLOW;
-	this.buffer.fillText(info.title, info.x, 0, info.width);
-	this.buffer.restore();
-}
-Carousel.prototype.deselectNavItem = function(index)
-{
-	var info = this.navData[index];
-	this.buffer.save();
-	this.buffer.clearRect(info.x, 0, info.width, this.visibleCanvas.height);
-	this.buffer.fillStyle = SELECTED_WHITE;
-	this.buffer.fillText(info.title, info.x, 0, info.width);
-	this.buffer.restore();
-}
-Carousel.prototype.redraw = function()
-{
-  //visibleContext.save();
-  this.visibleContext.clearRect(0,0,this.visibleCanvas.width,this.visibleCanvas.height); // clear canvas
-  this.visibleContext.drawImage(this.bufferCanvas,this.offsetX,0);
-  //visibleContext.restore();
+	this.buffer.drawImage(image,itemX,0);
+	this.visibleContext.drawImage(this.bufferCanvas,0,0);
 }
