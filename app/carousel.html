@@ -1,7 +1,23 @@
 <link rel="import" href="js/libs/components/polymer/polymer.html">
 <polymer-element name="x-carousel">
   <template>
-    <canvas width="1280px" height="275px" id="carousel"></canvas>
+    <style>
+    .wrapper {
+        position: relative;
+        width: 1280px;
+        height: 275px;
+    }
+
+    .wrapper canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    </style>
+    <div class="wrapper">
+      <canvas width="1280px" height="275px" id="carousel"></canvas>
+      <canvas width="1280px" height="275px" id="selection"></canvas>
+    </div>
   </template>
   <script>
   Polymer({
@@ -13,6 +29,10 @@
     getCarousel:function()
     {
       return this.$.carousel;
+    },
+    getSelection:function()
+    {
+      return this.$.selection;
     }
   })
   </script>

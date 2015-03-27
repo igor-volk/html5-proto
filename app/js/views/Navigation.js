@@ -1,7 +1,5 @@
 function Navigation(view)
 {
-	window.addEventListener("keydown", this.keydownHandler.bind(this));
-
 	this.selectedIndex = 0;
 	this.gap = 40;
 	this.navData = [
@@ -44,28 +42,6 @@ function Navigation(view)
 	this.addNavItem(this.selectedIndex, 0, this.navData);
 	this.selectNavItem(this.selectedIndex);
 	this.visibleContext.drawImage(this.bufferCanvas,0,0);
-}
-
-
-Navigation.prototype.keydownHandler = function(event)
-{
-	switch (event.keyCode) 
-	{
-		case 37:
-	     		//left
-	            this.navigateLeft();
-	            break;
-	    case 38:
-	            //up
-	            break;
-	    case 39:
-	            this.navigateRight();
-	            //right
-	            break;
-	    case 40:
-	            //down
-	            break;
-	}
 }
 
 Navigation.prototype.addNavItem = function(index, xText, data) 
@@ -125,4 +101,14 @@ Navigation.prototype.redraw = function()
   this.visibleContext.clearRect(0,0,this.visibleCanvas.width,this.visibleCanvas.height); // clear canvas
   this.visibleContext.drawImage(this.bufferCanvas,this.offsetX,0);
   //visibleContext.restore();
+}
+Navigation.prototype.deselect = function()
+{
+	this.deselectNavItem(this.selectedIndex);
+	this.redraw();
+}
+Navigation.prototype.select = function()
+{
+	this.selectNavItem(this.selectedIndex);
+	this.redraw();
 }
