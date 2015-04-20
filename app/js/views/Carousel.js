@@ -46,33 +46,10 @@ Carousel.prototype.build = function(carouselVO)
 	Rx.Observable.range(this.itemOffsetIndex, this.itemOffsetIndex + numItems)
 	.map(this.makeLoader.bind(this))
 	.mergeAll()
-	.map(this.addImage.bind(this))
-	.subscribe();
+	//.map(this.addImage.bind(this))
+	.subscribe(this.addImage.bind(this));
 
 	this.selection.src = "asset/img/all/highlight_item.png";
-	
-	// for(var i = this.itemOffsetIndex; i < this.itemOffsetIndex + numItems; i++)
-	// {
-	// 	// renderer = new _itemRendererType();
-	// 	// var d:Object = _itemData[i];
-	// 	// renderer.render(d);
-	// 	// renderer.x = currentX;
-	// 	// currentX += renderer.width + SPACING;
-	// 	// _items[i% NUMBER_OF_ITEMS] = renderer;
-	// 	// _itemHolder.addChild(renderer);
-	// 	Rx.
-	// 	var item = new CarouselItem();
-	// 	currentX += item.width + this.SPACING;
-	// 	item.x = currentX;
-	// 	item.load(this.itemData[i].links[0].href);
-	// 	item.onImageLoaded.add(this.addItem.bind(this));
-
-	// 	this.items[i%this.NUMBER_OF_ITEMS] = item;
-	// }	
-	
-		//_itemHolder.x = -selectedItemRenderer.x;
-		//selectedItemRenderer.onItemChanged.add(onCarouselStopped.dispatch);
-		//_flushTimer.start();
 
 }
 Carousel.prototype.makeLoader = function(val, i, observ)
@@ -80,22 +57,19 @@ Carousel.prototype.makeLoader = function(val, i, observ)
 	var url = this.formURLWithImage(this.itemData[i].links[0].href);
 	var image = new Image();
 	image.src = url;
-	image.index = i;
-	image.myX = this.currentX;
 	this.images[i] = image;
-	this.currentX += this.itemWidth + this.SPACING;
-	return Rx.Observable.fromEvent(image, "load",function(args) {
-		return {event:args[0], index:args[0].target.index};
+	var scope = this;
+	//return Rx.Observable.fromEvent(image, "load");
+	return Rx.Observable.fromEvent(image, "load", function(args) {
+		return {image:args[0].target, index:i};
 	} );
 }
-Carousel.prototype.addImage = function(event, ind, observ) 
+Carousel.prototype.addImage = function(payload) 
 {
-	
-	console.log("added "+ind+" image.index="+event.target.index);//event.target.index
-	var image = event.target;
-	this.buffer.drawImage(image,image.myX,0);
-	this.visibleContext.drawImage(image,image.myX,0);
-	return image;
+	console.log("added "+payload.index+" image.index="+this.getX(payload.index));//event.target.index
+	this.buffer.drawImage(payload.image, this.getX(payload.index), 0);//this.getX(ind)
+	this.visibleContext.drawImage(payload.image, this.getX(payload.index), 0);
+	//return payload.image;
 }
 Carousel.prototype.formURLWithImage = function(url)
 {
@@ -103,6 +77,10 @@ Carousel.prototype.formURLWithImage = function(url)
 	var base = arr[0];
 	url = base+"?s="+this.itemWidth+"x"+this.itemHeight;
 	return url;
+}
+Carousel.prototype.getX = function(i)
+{
+	return (this.itemWidth + this.SPACING) * i;
 }
 Carousel.prototype.select = function()
 {
@@ -155,7 +133,6 @@ Carousel.prototype.recycleNext = function(nextIndex)
 {
 	var loaderToRecycle = this.images.shift();
 	this.images.push(loaderToRecycle);
-	loaderToRecycle.myX = (this.itemWidth + this.SPACING) * (this.NUMBER_OF_ITEMS -1);
 	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	return Rx.Observable.fromEvent(loaderToRecycle, "load");
 }
@@ -165,7 +142,7 @@ Carousel.prototype.redrawBuffer = function(nextIndex)
 	for(var i=0; i<this.images.length; i++)
 	{
 		image = this.images[i];
-		this.buffer.drawImage(image,image.myX,0);
+		this.buffer.drawImage(image,this.getX(i),0);
 	}
 }
 Carousel.prototype.redraw = function()
