@@ -26,10 +26,8 @@ function Carousel(view)
 	this.bufferCanvas.height = this.visibleCanvas.height;
 
 	this.selection = new Image();
-
-	//this.addNavItem(this.selectedIndex, 0, this.navData);
-	//this.selectNavItem(this.selectedIndex);
-	//this.visibleContext.drawImage(this.bufferCanvas,0,0);
+	this.placeholder = new Image();
+	this.imageCounter = 0;
 }
 
 Carousel.prototype.build = function(carouselVO)
@@ -46,24 +44,11 @@ Carousel.prototype.build = function(carouselVO)
 	this.subscr = Rx.Observable.range(this.itemOffsetIndex, this.itemOffsetIndex + numItems)
 	.map(this.makeLoader.bind(this))
 	.mergeAll()
-	.map(this.addImage.bind(this))
-	.subscribe(
-
-    function (x) {
-        console.log('Next: ' + x);
-    },
-    function (err) {
-        console.log('Error: ' + err);   
-    },
-    function () {
-        console.log('Completed');   
-    }
-
-
-	);
+	//.map(this.addImage.bind(this))
+	.subscribe(this.addImage.bind(this));
 
 	this.selection.src = "asset/img/all/highlight_item.png";
-
+	this.placeholder.src = "asset/img/all/default_placeholder_193x275.png";
 }
 Carousel.prototype.makeLoader = function(val, i, observ)
 {
@@ -73,16 +58,21 @@ Carousel.prototype.makeLoader = function(val, i, observ)
 	image.src = url;
 	this.images[i] = image;
 	return Rx.Observable.fromEvent(image, "load", function(args) {
-		return {image:args[0].target, index:i};
+		return {image:args[0].target, index:i, count:observ.source.count};
 	} );
 }
 Carousel.prototype.addImage = function(payload) 
 {
 	var a = arguments;
-	console.log("added "+payload.index+" x="+this.getX(payload.index));
+	this.imageCounter++;
+	//console.log("added "+payload.index+" x="+this.getX(payload.index) + " count="+payload.count);
 	this.buffer.drawImage(payload.image, this.getX(payload.index), 0);
 	this.visibleContext.drawImage(payload.image, this.getX(payload.index), 0);
-	//return payload.image;
+	if(this.imageCounter > (payload.count - 1))
+	{
+		this.subscr.dispose();
+		this.imageCounter = 0;
+	}
 }
 Carousel.prototype.navigateRight = function()
 {
@@ -90,18 +80,16 @@ Carousel.prototype.navigateRight = function()
 
 	this.deselectItem(this.selectedIndex);
 	this.selectedIndex++
-	//this.selectItem(this.selectedIndex);
-	var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
-	console.log("navigateRight -> selectedIndex="+this.selectedIndex+ " packshotIndex="+packshotIndex+" offsetIndex="+this.itemOffsetIndex);
-	var nextX = packshotIndex * (this.itemWidth + this.SPACING)
+	//var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
+	//console.log("navigateRight -> selectedIndex="+this.selectedIndex+ " packshotIndex="+packshotIndex+" offsetIndex="+this.itemOffsetIndex);
+	var nextX = this.itemWidth + this.SPACING;//packshotIndex * (this.itemWidth + this.SPACING)
 	var redraw = this.redraw.bind(this);
 	var selectItem = this.selectItem.bind(this);
 	var nextIndexToLoad = this.selectedIndex + this.NUMBER_OF_ITEMS - 1;
 
-	this.recycleNext(nextIndexToLoad)
-	.subscribe(this.redrawBuffer.bind(this));
+	this.recycleNextRight(nextIndexToLoad).subscribe(this.redrawBuffer.bind(this));
 
-	TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:selectItem, onCompleteParams:[this.selectedIndex]});
+	this.tween = TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:selectItem, onCompleteParams:[this.selectedIndex]});
 }
 Carousel.prototype.navigateLeft = function()
 {
@@ -109,40 +97,49 @@ Carousel.prototype.navigateLeft = function()
 
 	this.deselectItem(this.selectedIndex);
 	this.selectedIndex--;
-	//this.selectItem(this.selectedIndex);
-	var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
-	var nextX = packshotIndex * (this.itemWidth + this.SPACING)
+	//var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
+	//console.log("navigateLeft -> selectedIndex="+this.selectedIndex+ " packshotIndex="+packshotIndex+" offsetIndex="+this.itemOffsetIndex);
+	var nextX = this.itemWidth + this.SPACING;//packshotIndex * (this.itemWidth + this.SPACING);
 	var redraw = this.redraw.bind(this);
 	var selectItem = this.selectItem.bind(this);
-	var nextIndexToLoad = this.selectedIndex - 1;
+	var nextIndexToLoad = this.selectedIndex;
 
-	this.recycleNext(nextIndexToLoad)
-	.subscribe(this.redrawBuffer.bind(this));
+	this.recycleNextLeft(nextIndexToLoad).subscribe(this.redrawBuffer.bind(this));
 
-	TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:selectItem, onCompleteParams:[this.selectedIndex]});
+	this.tween = TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:selectItem, onCompleteParams:[this.selectedIndex]});
 }
-Carousel.prototype.recycleNext = function(nextIndex) 
+Carousel.prototype.recycleNextRight = function(nextIndex) 
 {
 	var loaderToRecycle = this.images.shift();
 	this.images.push(loaderToRecycle);
 	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	return Rx.Observable.fromEvent(loaderToRecycle, "load");
 }
+Carousel.prototype.recycleNextLeft = function(nextIndex) 
+{
+	var loaderToRecycle = this.images.pop();
+	this.images.unshift(loaderToRecycle);
+	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
+	return Rx.Observable.fromEvent(loaderToRecycle, "load");
+}
 Carousel.prototype.redrawBuffer = function(nextIndex) 
 {
 	var image;
+	this.offsetX = 0;
 	for(var i=0; i<this.images.length; i++)
 	{
 		image = this.images[i];
-		this.buffer.drawImage(image,this.getX(i),0);
+		var newX = this.getX(i);
+		if(image.width > 0) this.buffer.drawImage(image,newX,0);
+		else this.buffer.drawImage(this.placeholder,newX,0);
 	}
+	this.redraw();
+	this.tween.kill();
 }
 Carousel.prototype.redraw = function()
 {
-  //visibleContext.save();
   this.visibleContext.clearRect(0,0,this.visibleCanvas.width,this.visibleCanvas.height); // clear canvas
   this.visibleContext.drawImage(this.bufferCanvas,this.offsetX,0);
-  //visibleContext.restore();
 }
 Carousel.prototype.formURLWithImage = function(url)
 {
@@ -150,6 +147,19 @@ Carousel.prototype.formURLWithImage = function(url)
 	var base = arr[0];
 	url = base+"?s="+this.itemWidth+"x"+this.itemHeight;
 	return url;
+}
+Carousel.prototype.insertPlaceholder = function(payload) 
+{
+	var a = arguments;
+	this.imageCounter++;
+	//console.log("added "+payload.index+" x="+this.getX(payload.index) + " count="+payload.count);
+	this.buffer.drawImage(payload.image, this.getX(payload.index), 0);
+	this.visibleContext.drawImage(payload.image, this.getX(payload.index), 0);
+	if(this.imageCounter > (payload.count - 1))
+	{
+		this.subscr.dispose();
+		this.imageCounter = 0;
+	}
 }
 Carousel.prototype.getX = function(i)
 {
