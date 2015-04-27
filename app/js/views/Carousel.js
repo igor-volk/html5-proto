@@ -78,7 +78,7 @@ Carousel.prototype.navigateRight = function()
 {
 	if(this.selectedIndex == (this.itemData.length - 1)) return;
 
-	this.deselectItem(this.selectedIndex);
+	this.deselect();
 	this.selectedIndex++
 	//var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
 	//console.log("navigateRight -> selectedIndex="+this.selectedIndex+ " packshotIndex="+packshotIndex+" offsetIndex="+this.itemOffsetIndex);
@@ -95,7 +95,7 @@ Carousel.prototype.navigateLeft = function()
 {
 	if(this.selectedIndex == 0) return;
 
-	this.deselectItem(this.selectedIndex);
+	this.deselect();
 	this.selectedIndex--;
 	//var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
 	//console.log("navigateLeft -> selectedIndex="+this.selectedIndex+ " packshotIndex="+packshotIndex+" offsetIndex="+this.itemOffsetIndex);
@@ -135,6 +135,7 @@ Carousel.prototype.redrawBuffer = function(nextIndex)
 	}
 	this.redraw();
 	this.tween.kill();
+	this.select();
 }
 Carousel.prototype.redraw = function()
 {
