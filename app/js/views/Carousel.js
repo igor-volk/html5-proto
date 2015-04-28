@@ -5,7 +5,7 @@ function Carousel(view)
 	this.itemData = [];
 	this.itemWidth = 193;
 	this.itemHeight = 275;
-	this.NUMBER_OF_ITEMS = 9;
+	this.NUMBER_OF_ITEMS = 8;
 	this.SPACING = 16;
 	this.VANISHING_POINT_LEFT = 2;
 	this.numberOfItems = 0;
@@ -22,7 +22,7 @@ function Carousel(view)
 
 	this.bufferCanvas = document.createElement('canvas')
 	this.buffer = this.bufferCanvas.getContext("2d");
-	this.bufferCanvas.width = this.visibleCanvas.width;
+	this.bufferCanvas.width = 1672;//this.visibleCanvas.width;
 	this.bufferCanvas.height = this.visibleCanvas.height;
 
 	this.selection = new Image();
@@ -87,9 +87,25 @@ Carousel.prototype.navigateRight = function()
 	var selectItem = this.selectItem.bind(this);
 	var nextIndexToLoad = this.selectedIndex + this.NUMBER_OF_ITEMS - 1;
 
-	this.recycleNextRight(nextIndexToLoad).subscribe(this.redrawBuffer.bind(this));
+	this.recycleNextRight(nextIndexToLoad).subscribe(this.addToBufferRight.bind(this));
 
-	this.tween = TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:selectItem, onCompleteParams:[this.selectedIndex]});
+	var onTweenComplete = this.onTweenComplete.bind(this);
+	this.tween = TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:onTweenComplete, onCompleteParams:[this.selectedIndex]});
+}
+Carousel.prototype.recycleNextRight = function(nextIndex) 
+{
+	var loaderToRecycle = this.images.shift();
+	this.images.push(loaderToRecycle);
+	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
+	return Rx.Observable.fromEvent(loaderToRecycle, "load");
+}
+Carousel.prototype.addToBufferRight = function() 
+{
+	var lastIndex = this.images.length - 1;
+	var image = this.images[lastIndex];
+	var newX = this.getX(lastIndex);
+	if(image.width > 0) this.buffer.drawImage(image,newX,0);
+	else this.buffer.drawImage(this.placeholder,newX,0);
 }
 Carousel.prototype.navigateLeft = function()
 {
@@ -104,16 +120,17 @@ Carousel.prototype.navigateLeft = function()
 	var selectItem = this.selectItem.bind(this);
 	var nextIndexToLoad = this.selectedIndex;
 
-	this.recycleNextLeft(nextIndexToLoad).subscribe(this.redrawBuffer.bind(this));
+	this.recycleNextLeft(nextIndexToLoad).subscribe(this.addToBufferLeft.bind(this));
 
-	this.tween = TweenLite.to(this, 0.8, {offsetX:-(nextX), onUpdate:redraw, onComplete:selectItem, onCompleteParams:[this.selectedIndex]});
+	var onTweenComplete = this.onTweenComplete.bind(this);
+	this.tween = TweenLite.to(this, 0.8, {offsetX:(nextX), onUpdate:redraw, onComplete:onTweenComplete, onCompleteParams:[this.selectedIndex]});//selectitem
 }
-Carousel.prototype.recycleNextRight = function(nextIndex) 
+Carousel.prototype.addToBufferLeft = function() 
 {
-	var loaderToRecycle = this.images.shift();
-	this.images.push(loaderToRecycle);
-	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
-	return Rx.Observable.fromEvent(loaderToRecycle, "load");
+	var image = this.images[0];
+	var newX = 0;
+	if(image.width > 0) this.buffer.drawImage(image,newX,0);
+	else this.buffer.drawImage(this.placeholder,newX,0);
 }
 Carousel.prototype.recycleNextLeft = function(nextIndex) 
 {
@@ -122,10 +139,10 @@ Carousel.prototype.recycleNextLeft = function(nextIndex)
 	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	return Rx.Observable.fromEvent(loaderToRecycle, "load");
 }
-Carousel.prototype.redrawBuffer = function(nextIndex) 
+Carousel.prototype.redrawBuffer = function() 
 {
 	var image;
-	this.offsetX = 0;
+	//this.offsetX = 0;
 	for(var i=0; i<this.images.length; i++)
 	{
 		image = this.images[i];
@@ -133,13 +150,20 @@ Carousel.prototype.redrawBuffer = function(nextIndex)
 		if(image.width > 0) this.buffer.drawImage(image,newX,0);
 		else this.buffer.drawImage(this.placeholder,newX,0);
 	}
+	//this.redraw();
+	//this.tween.kill();
+	this.select();
+}
+Carousel.prototype.onTweenComplete = function(nextIndex) 
+{
+	this.offsetX = 0;
+	this.redrawBuffer();
 	this.redraw();
-	this.tween.kill();
 	this.select();
 }
 Carousel.prototype.redraw = function()
 {
-  this.visibleContext.clearRect(0,0,this.visibleCanvas.width,this.visibleCanvas.height); // clear canvas
+  this.visibleContext.clearRect(this.offsetX,0,this.visibleCanvas.width,this.visibleCanvas.height); // clear canvas
   this.visibleContext.drawImage(this.bufferCanvas,this.offsetX,0);
 }
 Carousel.prototype.formURLWithImage = function(url)
