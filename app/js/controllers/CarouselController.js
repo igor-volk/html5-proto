@@ -10,6 +10,6 @@ function CarouselController(view, service)
 CarouselController.prototype.buildView = function(e)
 {
 	var jsonData = e.target.response;
-	var carouselVO = JSON.parse(jsonData)
+	var carouselVO = JSON.parse(jsonData);
 	this.view.build(carouselVO);
 }
