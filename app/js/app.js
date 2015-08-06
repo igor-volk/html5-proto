@@ -1,6 +1,7 @@
 document.addEventListener('polymer-ready', function() 
 	{
-
+		Rx.config.longStackSupport = true;
+		
 		var navComp = document.querySelector("x-navigation");
 		var navigation = new Navigation(navComp);
 		var carouselComp = document.querySelector("x-carousel");
