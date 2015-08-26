@@ -1,0 +1,11 @@
+{
+    "id": "sky.atlas.canvassCarousel.lorempixel.app2",
+    "version": "0.0.1",
+    "vendor": "Sky",
+    "type": "web",
+    "main": "index.html",
+    "title": "Canvas Prototype",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "uiRevision":2
+}

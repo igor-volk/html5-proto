@@ -68,8 +68,6 @@ Carousel.prototype.createImageLoadStream = function(image, indexToLoad, currentS
 	var placeholder = this.placeholder;
 	console.log("createImageLoadStream for "+image.title+" :: indexToLoad - "+indexToLoad);
 
-	
-
 	var errorStream = Rx.Observable.fromEvent(image,"error", function(args) {
 		console.log("failed "+scope.itemData[indexToLoad].title+" indexToLoad "+indexToLoad+" currentSelectedIndex "+currentSelectedIndex);
 		return {image:placeholder, indexToLoad:indexToLoad, currentSelectedIndex:currentSelectedIndex, count:count, url:url};
@@ -80,7 +78,7 @@ Carousel.prototype.createImageLoadStream = function(image, indexToLoad, currentS
 		return {image:args[0].target, indexToLoad:indexToLoad, currentSelectedIndex:currentSelectedIndex, count:count, url:url};
 	} );
 
-	var dataStream = loadStream.merge(errorStream);
+	var dataStream = loadStream.merge(errorStream).first();
 
 	return dataStream;
 }
@@ -107,21 +105,22 @@ Carousel.prototype.navigateRight = function()
 	
 	var nextX = this.itemWidth + this.SPACING;
 	var redrawVisible = this.redrawVisible.bind(this);
-	var selectItem = this.selectItem.bind(this);
 	var nextIndexToLoad = this.selectedIndex + this.NUMBER_OF_ITEMS - 1;
 	console.log("navigateRight -> nextIndexToLoad="+nextIndexToLoad);
 
 	this.recycleNextRight(nextIndexToLoad).subscribe(this.addToBufferRight.bind(this));
-	//this.onTweenComplete();
+
 	if(this.tween)
 	{
 		this.onTweenComplete();
+		//return;
 	}
 	
 	var onTweenComplete = this.onTweenComplete.bind(this);
 	var select = this.select.bind(this);
-	this.tween = TweenLite.to(this, this.tweenSpeed, {offsetX:-(nextX), onUpdate:redrawVisible, onComplete:onTweenComplete});//, onComplete:onTweenComplete
+	this.tween = TweenLite.to(this, this.tweenSpeed, {offsetX:-(nextX), onUpdate:redrawVisible, onComplete:onTweenComplete});
 }
+
 Carousel.prototype.recycleNextRight = function(nextIndex)
 {
 	var loaderToRecycle = this.images.shift();
@@ -129,9 +128,8 @@ Carousel.prototype.recycleNextRight = function(nextIndex)
 	loaderToRecycle.title = this.itemData[nextIndex].title;
 	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	var placeholder = this.placeholder;
-	console.log("placeholder for index "+nextIndex);
 	var selectedIndex = this.selectedIndex;
-	this.addToBufferRight({image:placeholder, indexToLoad:nextIndex, currentSelectedIndex:selectedIndex, count:0, url:""});
+	//this.addToBufferRight({image:placeholder, indexToLoad:nextIndex, currentSelectedIndex:selectedIndex, count:0, url:""});
 	
 	return this.createImageLoadStream(loaderToRecycle, nextIndex, selectedIndex, 0, loaderToRecycle.src);
 }
@@ -142,29 +140,36 @@ Carousel.prototype.addToBufferRight = function(payload)
 	if(payload.currentSelectedIndex == this.selectedIndex)
 	{
 		packshotIndex = this.images.length - 1;
+		console.log("addToBufferRight: (NORM)"+image.title+" index = "+payload.indexToLoad+" packshot = "+packshotIndex);
 	}
 	else
 	{
-		packshotIndex = (this.images.length - 1) - (this.selectedIndex - payload.currentSelectedIndex);
+		var diff = this.selectedIndex - payload.currentSelectedIndex;
+		packshotIndex = (this.images.length - 1) - diff;
+		console.log("addToBufferRight (LATE by "+diff+") : "+image.title+" index = "+payload.indexToLoad+" packshot = "+packshotIndex);
 	}
 	var newX = this.getX(packshotIndex + 1);
-	console.log("addToBufferRight: index = "+payload.indexToLoad+" packshotIndex = "+packshotIndex+" x = "+ newX);
 	this.drawToBuffer(image,newX);
 }
-
 Carousel.prototype.onTweenComplete = function() 
 {
-	this.offsetX = 0;
-	this.redrawBuffer();
-	//this.redrawVisible();
-	this.select();
+	this.redrawAll();
 	if(this.tween)
 	{
 		this.tween.kill();
-	this.tween = null;
+		this.tween = null;
 	}
-	
+	console.log("Tween Complete, selected item is "+this.itemData[this.selectedIndex].title)
 }
+Carousel.prototype.redrawAll = function() 
+{
+	this.offsetX = 0;
+	this.redrawBuffer();
+	this.redrawVisible();
+	this.select();
+	console.log("redrawAll, selected item is "+this.itemData[this.selectedIndex].title)
+}
+
 Carousel.prototype.drawToBuffer = function(image, newX)
 {
 	var actX = newX + 209;
@@ -179,8 +184,7 @@ Carousel.prototype.redrawBuffer = function()
 	{
 		image = this.images[i];
 		var newX = this.getX(i);
-		if(image.width > 0) this.drawToBuffer(image,newX);
-		else this.drawToBuffer(this.placeholder,newX);
+		this.drawToBuffer(image,newX);
 	}
 }
 Carousel.prototype.redrawVisible = function()
@@ -223,12 +227,10 @@ Carousel.prototype.navigateLeft = function()
 
 	this.deselect();
 	this.selectedIndex--;
-	//var packshotIndex = this.selectedIndex % this.NUMBER_OF_ITEMS;
-	//console.log("navigateLeft -> selectedIndex="+this.selectedIndex+ " packshotIndex="+packshotIndex+" offsetIndex="+this.itemOffsetIndex);
-	var nextX = this.itemWidth + this.SPACING;//packshotIndex * (this.itemWidth + this.SPACING);
 	var redrawVisible = this.redrawVisible.bind(this);
-	var selectItem = this.selectItem.bind(this);
+	var nextX = this.itemWidth + this.SPACING;
 	var nextIndexToLoad = this.selectedIndex;
+	console.log("navigateRight -> nextIndexToLoad="+nextIndexToLoad);
 
 	this.recycleNextLeft(nextIndexToLoad).subscribe(this.addToBufferLeft.bind(this));
 	if(this.tween)
@@ -236,15 +238,9 @@ Carousel.prototype.navigateLeft = function()
 		this.onTweenComplete();
 	}
 	
-	//var onTweenComplete = this.onTweenComplete.bind(this);
+	var onTweenComplete = this.onTweenComplete.bind(this);
 	var select = this.select.bind(this);
 	this.tween = TweenLite.to(this, this.tweenSpeed, {offsetX:(nextX), onUpdate:redrawVisible, onComplete:select});
-}
-Carousel.prototype.addToBufferLeft = function(payload) 
-{
-	var image = payload.image;
-	var newX = -209;
-	this.drawToBuffer(image,newX,0);
 }
 Carousel.prototype.recycleNextLeft = function(nextIndex) 
 {
@@ -252,7 +248,24 @@ Carousel.prototype.recycleNextLeft = function(nextIndex)
 	this.images.unshift(loaderToRecycle);
 	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	var placeholder = this.placeholder;
-	this.addToBufferLeft({image:placeholder, index:0});
+	var selectedIndex = this.selectedIndex;
+	this.addToBufferLeft({image:placeholder, indexToLoad:nextIndex, currentSelectedIndex:selectedIndex, count:0, url:""});
 
-	return this.createImageLoadStream(loaderToRecycle, 0, 0, loaderToRecycle.src);
+	return this.createImageLoadStream(loaderToRecycle, nextIndex, selectedIndex, 0, loaderToRecycle.src);
 }
+Carousel.prototype.addToBufferLeft = function(payload) 
+{
+	var image = payload.image;
+	var newX;
+	if(payload.currentSelectedIndex == this.selectedIndex)
+	{
+		newX = -209;
+	}
+	else
+	{
+		newX = -209 + (209 * (payload.currentSelectedIndex - this.selectedIndex));
+	}
+	
+	this.drawToBuffer(image,newX,0);
+}
+

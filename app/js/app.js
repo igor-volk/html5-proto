@@ -12,7 +12,7 @@ document.addEventListener('polymer-ready', function()
 		var selectedItem = navigation;
 
 		var source = Rx.Observable.fromEvent(document, "keydown");
-		var subscription = source.subscribe(function (event) {
+		var subscription = source.subscribe(function onKeyDown(event) {
 			switch (event.keyCode) 
 			{
 				case 37:
