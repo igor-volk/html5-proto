@@ -1,10 +1,10 @@
 function CarouselController(view, service)
 {
 	this.view = view;
-	this.buildFakeView();
-	// var request = service.load();
-	// var source = Rx.Observable.fromEvent(request, "load")
-	// var subscription = source.subscribe(this.buildView.bind(this));
+	//this.buildFakeView();
+	var request = service.load();
+	var source = Rx.Observable.fromEvent(request, "load")
+	var subscription = source.subscribe(this.buildView.bind(this));
 }
 
 CarouselController.prototype.buildView = function(e)
