@@ -11,7 +11,8 @@ CarouselController.prototype.buildView = function(e)
 {
 	var jsonData = e.target.response;
 	var carouselVO = JSON.parse(jsonData);
-	this.view.build(carouselVO);
+	var items = carouselVO._links[2]._links[3]._links.slice(2);
+	this.view.build(items);
 }
 CarouselController.prototype.buildFakeView = function()
 {

@@ -3,8 +3,8 @@ function Carousel(view)
 
 	this.images = [];
 	this.itemData = [];
-	this.itemWidth = 193;
-	this.itemHeight = 275;
+	this.itemWidth = 266;//193;
+	this.itemHeight = 394;//275;
 	this.NUMBER_OF_ITEMS = 6;
 	this.SPACING = 16;
 	this.VANISHING_POINT_LEFT = 2;
@@ -32,14 +32,14 @@ function Carousel(view)
 	this.imageCounter = 0;
 }
 
-Carousel.prototype.build = function(carouselVO)
+Carousel.prototype.build = function(items)
 {
 	Rx.config.longStackSupport = true;
 
 	this.selection.src = "asset/img/all/highlight_item.png";
 	this.placeholder.src = "asset/img/all/default_placeholder_193x275.png";
 
-	this.itemData = carouselVO.content.assets;
+	this.itemData = items;
 
 	var currentX = 0;
 	var numItems = (this.NUMBER_OF_ITEMS<this.itemData.length) ? this.NUMBER_OF_ITEMS : this.itemData.length;
@@ -54,7 +54,7 @@ Carousel.prototype.build = function(carouselVO)
 Carousel.prototype.makeLoader = function(val, i, observ)
 {
 	var a = arguments;
-	var url = this.formURLWithImage(this.itemData[i].links[0].href);
+	var url = this.itemData[i].images[2].url;//this.formURLWithImage(this.itemData[i].images[2].url);
 	var image = new Image();
 	image.title = this.itemData[i].title;
 	image.src = url;
@@ -126,7 +126,7 @@ Carousel.prototype.recycleNextRight = function(nextIndex)
 	var loaderToRecycle = this.images.shift();
 	this.images.push(loaderToRecycle);
 	loaderToRecycle.title = this.itemData[nextIndex].title;
-	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
+	loaderToRecycle.src = this.itemData[nextIndex].images[2].url;//this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	var placeholder = this.placeholder;
 	var selectedIndex = this.selectedIndex;
 	//this.addToBufferRight({image:placeholder, indexToLoad:nextIndex, currentSelectedIndex:selectedIndex, count:0, url:""});
@@ -246,7 +246,7 @@ Carousel.prototype.recycleNextLeft = function(nextIndex)
 {
 	var loaderToRecycle = this.images.pop();
 	this.images.unshift(loaderToRecycle);
-	loaderToRecycle.src = this.formURLWithImage(this.itemData[nextIndex].links[0].href);
+	loaderToRecycle.src = this.itemData[nextIndex].images[2].url;//this.formURLWithImage(this.itemData[nextIndex].links[0].href);
 	var placeholder = this.placeholder;
 	var selectedIndex = this.selectedIndex;
 	this.addToBufferLeft({image:placeholder, indexToLoad:nextIndex, currentSelectedIndex:selectedIndex, count:0, url:""});
