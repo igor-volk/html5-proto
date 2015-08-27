@@ -25,7 +25,7 @@ function Carousel(view)
 	this.bufferCanvas.width = 1698;//this.visibleCanvas.width;
 	this.bufferCanvas.height = this.visibleCanvas.height;
 
-	document.getElementById('container').appendChild(this.bufferCanvas);
+	//document.getElementById('container').appendChild(this.bufferCanvas);
 
 	this.selection = new Image();
 	this.placeholder = new Image();
